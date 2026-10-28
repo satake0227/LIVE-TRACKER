@@ -16,7 +16,7 @@ function name(e){return `${e.artist} / ${e.title}`}
 function eventFor(a){return data.events.find(e=>e.id===a.eventId)}
 function apps(e){return data.applications.filter(a=>a.eventId===e.id)}
 function tab(t){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('hidden',p.id!==t));document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===(t==='detail'?'events':t)));window.scrollTo(0,0)}
-function link(parent,url){if(!url)return;try{const u=new URL(url);if(!['http:','https:'].includes(u.protocol))return;const a=node('a','','公式情報を見る ↗');a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';parent.append(a)}catch{}}
+function link(parent,url){if(!url)return;try{const u=new URL(url);if(!['http:','https:'].includes(u.protocol))return;const a=node('a','','公式情報を見る ↗');a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';a.referrerPolicy='no-referrer';parent.append(a)}catch{}}
 function timeline(){let t=[];for(const e of data.events)if(e.date||e.dateOnly)t.push({date:e.date||e.dateOnly,label:'公演',title:name(e),eventId:e.id});for(const a of data.applications){const e=eventFor(a);if(!e)continue;for(const [key,label] of [['applyStart','受付開始'],['applyDeadline','申込締切'],['resultDate','当落発表'],['paymentDue','入金期限'],['paidDate','支払日'],['withdrawalDate','カード引落日']])if(a[key])t.push({date:a[key],label,title:`${name(e)} / ${a.type}`,eventId:e.id,done:(key==='paymentDue'&&(['paid','none'].includes(a.paymentStatus)||a.result==='lost'))||(key==='applyDeadline'&&['applied','cancelled'].includes(a.applicationStatus))||(key==='resultDate'&&['won','lost'].includes(a.result))});}return t.sort((a,b)=>a.date.localeCompare(b.date));}
 function timelineCard(t){const c=node('div','card');c.append(node('strong','',`${fmt(t.date)}　${t.label}${t.done?'（対応済み）':''}`),node('p','muted',t.title),button('公演詳細',()=>detail(t.eventId)));return c}
 function empty(target,text){target.append(node('div','empty',text))}
@@ -42,7 +42,7 @@ $('#searchEvents').onclick=async()=>{
  if(!q){out.textContent='先にアーティスト名を入力してください。';return}
  out.textContent='検索中…';b.disabled=true;
  try{
-  const response=await fetch('/api/search?artist='+encodeURIComponent(q));
+  const response=await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({artist:q}),cache:'no-store',credentials:'same-origin',referrerPolicy:'no-referrer'});
   let result;try{result=await response.json()}catch{throw Error('検索サーバーを利用できません。Vercelでの設定手順を確認してください。')}
   if(!response.ok)throw Error(result.error||'検索できませんでした。');
   if(!$('#wizard').open||mode!=='new'||f.elements.artist.value.trim()!==q){out.textContent='アーティスト名が変更されました。もう一度検索してください。';return}
